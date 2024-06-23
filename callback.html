@@ -11,8 +11,8 @@
 <body>
     <script>
         var webAuth = new auth0.WebAuth({
-            domain: 'YOUR_AUTH0_DOMAIN',
-            clientID: 'YOUR_AUTH0_CLIENT_ID'
+            domain: 'dev-yzz32hk1h2ayb5s7.us.auth0.com',
+            clientID: '8xopaMZSgLJntdmPuRHWLSf0aklaUi9m'
         });
 
         webAuth.parseHash(window.location.hash, function(err, authResult) {
@@ -20,7 +20,6 @@
                 return console.log(err);
             }
             if (authResult && authResult.accessToken && authResult.idToken) {
-                window.location.hash = '';
                 window.localStorage.setItem('accessToken', authResult.accessToken);
                 window.localStorage.setItem('idToken', authResult.idToken);
                 window.location.href = '/';
