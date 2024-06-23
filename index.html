@@ -7,6 +7,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <title>ItalianBird</title>
     <script src="sprite.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/oauth-js@0.1.0/dist/oauth.min.js"></script>
     <style>
         canvas {
             display: block;
@@ -17,73 +18,163 @@
             left: 0;
             right: 0;
         }
-        /* Styles for the Twitter login popup */
-        #twitter-popup {
-            display: none; /* Hidden by default */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-        #twitter-popup-content {
+        #login-btn {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        #twitter-login-button {
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
             padding: 10px 20px;
-            background-color: #1da1f2;
+            background-color: #1DA1F2;
             color: white;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <!-- Twitter login popup -->
-    <div id="twitter-popup">
-        <div id="twitter-popup-content">
-            <h2>Connect with Twitter</h2>
-            <p>Please connect with Twitter to proceed.</p>
-            <button id="twitter-login-button">Connect with Twitter</button>
-        </div>
-    </div>
-
-    <script src="https://cdn.auth0.com/js/auth0/9.15/auth0.min.js"></script>
+    <button id="login-btn">Login with Twitter</button>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var popup = document.getElementById("twitter-popup");
-            var loginButton = document.getElementById("twitter-login-button");
+        // Twitter OAuth initialization
+        OAuth.initialize('8xopaMZSgLJntdmPuRHWLSf0aklaUi9m');
 
-            // Show the popup initially
-            popup.style.display = "block";
-
-            var webAuth = new auth0.WebAuth({
-                domain: 'dev-yzz32hk1h2ayb5s7.us.auth0.com',
-                clientID: '8xopaMZSgLJntdmPuRHWLSf0aklaUi9m',
-                redirectUri: window.location.href + 'callback',
-                responseType: 'token id_token',
-                scope: 'openid profile'
-            });
-
-            loginButton.addEventListener("click", function() {
-                webAuth.authorize({
-                    connection: 'twitter'
-                });
+        document.getElementById('login-btn').addEventListener('click', function() {
+            OAuth.popup('twitter').then(twitter => {
+                console.log('twitter:', twitter);
+                return twitter.me();
+            }).then(data => {
+                console.log('data:', data);
+                // Use the authenticated user's data
+                alert('Hello ' + data.alias);
+                // You can save the user's information here
+            }).catch(err => {
+                console.error(err);
+                alert('Error during Twitter authentication');
             });
         });
+
+        var canvas, ctx, width, height, fgpos = 0, frames = 0, score = 0, best = 0, currentstate, states = {
+            Splash: 0,
+            Game: 1,
+            Score: 2
+        }, bird = {
+            x: 60,
+            y: 100,
+            frame: 0,
+            velocity: 0,
+            animation: [0, 1, 2, 1],
+            rotation: 0,
+            gravity: 0.25,
+            _jump: 4.6,
+            radius: 12,
+            jump: function() {
+                this.velocity = -this._jump;
+            },
+            update: function() {
+                var n = currentstate === states.Splash ? 10 : 5;
+                this.frame += frames % n === 0 ? 1 : 0;
+                this.frame = this.frame % this.animation.length;
+                if (currentstate === states.Splash) this.y = height - 280 + 5 * Math.cos(frames / 10), this.rotation = 0;
+                else {
+                    this.velocity += this.gravity;
+                    this.y += this.velocity;
+                    this.y >= height - s_fg.height - 10 && (this.y = height - s_fg.height - 10, currentstate === states.Game && (currentstate = states.Score), this.velocity = this._jump);
+                    this.velocity >= this._jump ? (this.frame = 1, this.rotation = Math.min(Math.PI / 6, this.rotation + .3)) : this.rotation = -.3;
+                }
+            },
+            draw: function(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                var n = this.animation[this.frame];
+                s_bird[n].draw(ctx, -s_bird[n].width / 2, -s_bird[n].height / 2);
+                ctx.restore();
+            }
+        }, pipes = {
+            _pipes: [],
+            reset: function() {
+                this._pipes = [];
+            },
+            update: function() {
+                if (frames % 100 === 0) {
+                    var n = height - (s_pipeSouth.height + s_fg.height + 120 + 200 * Math.random());
+                    this._pipes.push({
+                        x: 500,
+                        y: n,
+                        width: s_pipeSouth.width,
+                        height: s_pipeSouth.height
+                    });
+                }
+                for (var n = 0, t = this._pipes.length; n < t; n++) {
+                    var i = this._pipes[n];
+                    0 === n ? (score += (i.x === bird.x ? 1 : 0), i = Math.min(Math.max(bird.x, i.x), i.x + i.width), i = Math.min(Math.max(bird.y, i.y), i.y + i.height), n = Math.min(Math.max(bird.y, i.y + i.height + 80), i.y + 2 * i.height + 80), t = (bird.x) - i, i = bird.y - n, i = bird.y - n, n = t * t + i + i, t = t * t + i * i, i = bird.radius + bird.radius, i > n || i > t) && (currentstate = states.Score) : i -= 2, -50 > i.x && (this._pipes.splice(n, 1), n--, t--);
+                }
+            },
+            draw: function(n) {
+                for (var t = 0, i = this._pipes.length; t < i; t++) {
+                    var e = this._pipes[t];
+                    s_pipeSouth.draw(n, e.x, e.y);
+                    s_pipeNorth.draw(n, e.x, e.y + 80 + e.height);
+                }
+            }
+        };
+        function onpress(evt) {
+            switch (currentstate) {
+                case states.Splash:
+                    currentstate = states.Game, bird.jump();
+                    break;
+                case states.Game:
+                    bird.jump();
+                    break;
+                case states.Score:
+                    var n = evt.offsetX, t = evt.offsetY;
+                    null == n && (n = evt.touches[0].clientX, t = evt.touches[0].clientY);
+                    okbtn.x < n && n < okbtn.x + okbtn.width && okbtn.y < t && t < okbtn.y + okbtn.height && (pipes.reset(), score = 0, currentstate = states.Splash);
+            }
+        }
+        function main() {
+            currentstate = states.Splash;
+            canvas = document.createElement("canvas");
+            width = window.innerWidth;
+            height = window.innerHeight;
+            var evt = "touchstart";
+            width >= 500 ? (width = 320, height = 480, canvas.style.border = "1px solid #020", evt = "mousedown") : width = 320;
+            height = 480;
+            canvas.style.border = "1px solid #020";
+            evt = "mousedown";
+            document.addEventListener(evt, onpress);
+            canvas.width = width;
+            canvas.height = height;
+            ctx = canvas.getContext("2d");
+            document.body.appendChild(canvas);
+            var img = new Image();
+            img.onload = function() {
+                initSprites(this), ctx.fillStyle = s_bg.color, okbtn = {
+                    x: (width - s_buttons.Ok.width) / 2,
+                    y: height - 200,
+                    width: s_buttons.Ok.width,
+                    height: s_buttons.Ok.height
+                }, run();
+            }, img.src = "sheet.png";
+        }
+        function run() {
+            var n = function() {
+                update(), render(), window.requestAnimationFrame(n, canvas);
+            };
+            window.requestAnimationFrame(n, canvas);
+        }
+        function update() {
+            frames++, currentstate !== states.Score ? fgpos = (fgpos - 2) % 14 : best = Math.max(best, score);
+            currentstate === states.Game && pipes.update(), bird.update();
+        }
+        function render() {
+            ctx.fillRect(0, 0, width, height), s_bg.draw(ctx, 0, height - s_bg.height), s_bg.draw(ctx, s_bg.width, height - s_bg.height), bird.draw(ctx), pipes.draw(ctx), s_fg.draw(ctx, fgpos, height - s_fg.height), s_fg.draw(ctx, fgpos + s_fg.width, height - s_fg.height);
+            var n = width / 2;
+            currentstate === states.Splash ? (s_splash.draw(ctx, n - s_splash.width / 2, height - 300), s_text.GetReady.draw(ctx, n - s_text.GetReady.width / 2, height - 400)) : currentstate === states.Score && (s_text.GameOver.draw(ctx, n - s_text.GameOver.width / 2, height - 400), s_score.draw(ctx, n - s_score.width / 2, height - 340), s_buttons.Ok.draw(ctx, okbtn.x, okbtn.y), s_numberS.draw(ctx, n - 47, height - 304, score, null, 10), s_numberS.draw(ctx, n - 47, height - 262, best, null, 10)), s_numberB.draw(ctx, null, 20, score, n, null);
+        }
+        main();
     </script>
 </body>
 <footer class="bg-dark">
-    <p><h3>Created: Famedoro&copy;</h3><br></p>
+    <p><h3>Created: Famedoro&copy;</h3><br>
 </footer>
 </html>
