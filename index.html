@@ -1,14 +1,3 @@
-Per rendere il gioco più veloce ogni 10 punti, dobbiamo aggiornare la velocità di scorrimento dei tubi e della posizione del terreno (`fgpos`) in funzione del punteggio. Questo implica modificare il codice JavaScript per incrementare queste velocità a intervalli di 10 punti.
-
-Ecco come puoi fare:
-
-1. Aggiungi una variabile per la velocità iniziale.
-2. Incrementa questa velocità ogni 10 punti.
-3. Applica la velocità aumentata alla posizione dei tubi e del terreno.
-
-Ecco la versione modificata del tuo codice:
-
-```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -241,9 +230,7 @@ Ecco la versione modificata del tuo codice:
             s_bg.draw(ctx, s_bg.width, height - s_bg.height);
             bird.draw(ctx);
             pipes.draw(ctx);
-            s_fg.draw(ctx,
-
- fgpos, height - s_fg.height);
+            s_fg.draw(ctx, fgpos, height - s_fg.height);
             s_fg.draw(ctx, fgpos + s_fg.width, height - s_fg.height);
             var width2 = width / 2;
             if (currentstate === states.Splash) {
@@ -284,9 +271,3 @@ Ecco la versione modificata del tuo codice:
     <p><h3>Created: Famedoro&copy;</h3><br></p>
 </footer>
 </html>
-```
-
-In questo codice:
-- Ho aggiunto una variabile `speed` inizializzata a 2.
-- La velocità dei tubi e del terreno (`fgpos`) aumenta di 0.5 ogni 10 punti.
-- La velocità viene resettata quando il gioco viene riavviato.
