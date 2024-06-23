@@ -1,3 +1,14 @@
+Per rendere il gioco più veloce ogni 10 punti, dobbiamo aggiornare la velocità di scorrimento dei tubi e della posizione del terreno (`fgpos`) in funzione del punteggio. Questo implica modificare il codice JavaScript per incrementare queste velocità a intervalli di 10 punti.
+
+Ecco come puoi fare:
+
+1. Aggiungi una variabile per la velocità iniziale.
+2. Incrementa questa velocità ogni 10 punti.
+3. Applica la velocità aumentata alla posizione dei tubi e del terreno.
+
+Ecco la versione modificata del tuo codice:
+
+```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -60,6 +71,7 @@
 
     <script>
         var canvas, ctx, width, height, fgpos = 0, frames = 0, score = 0, best = 0, currentstate,
+            speed = 2, // Initial speed
             states = { Splash: 0, Game: 1, Score: 2 },
             bird = {
                 x: 60, y: 100, frame: 0, velocity: 0, animation: [0, 1, 2, 1], rotation: 0, gravity: 0.25, _jump: 4.6, radius: 12,
@@ -109,6 +121,10 @@
                         var p = this._pipes[i];
                         if (i === 0) {
                             score += (p.x === bird.x) ? 1 : 0;
+                            // Update speed every 10 points
+                            if (score % 10 === 0 && score !== 0) {
+                                speed += 0.5;
+                            }
                             var cx = Math.min(Math.max(bird.x, p.x), p.x + p.width);
                             var cy1 = Math.min(Math.max(bird.y, p.y), p.y + p.height);
                             var cy2 = Math.min(Math.max(bird.y, p.y + p.height + 80), p.y + 2 * p.height + 80);
@@ -122,7 +138,7 @@
                                 currentstate = states.Score;
                             }
                         }
-                        p.x -= 2;
+                        p.x -= speed;
                         if (p.x < -50) {
                             this._pipes.splice(i, 1);
                             i--;
@@ -158,6 +174,7 @@
                         okbtn.y < my && my < okbtn.y + okbtn.height) {
                         pipes.reset();
                         score = 0;
+                        speed = 2; // Reset speed when game restarts
                         currentstate = states.Splash;
                     }
                     break;
@@ -208,7 +225,7 @@
         function update() {
             frames++;
             if (currentstate !== states.Score) {
-                fgpos = (fgpos - 2) % 14;
+                fgpos = (fgpos - speed) % 14;
             } else {
                 best = Math.max(best, score);
             }
@@ -224,7 +241,9 @@
             s_bg.draw(ctx, s_bg.width, height - s_bg.height);
             bird.draw(ctx);
             pipes.draw(ctx);
-            s_fg.draw(ctx, fgpos, height - s_fg.height);
+            s_fg.draw(ctx,
+
+ fgpos, height - s_fg.height);
             s_fg.draw(ctx, fgpos + s_fg.width, height - s_fg.height);
             var width2 = width / 2;
             if (currentstate === states.Splash) {
@@ -265,3 +284,9 @@
     <p><h3>Created: Famedoro&copy;</h3><br></p>
 </footer>
 </html>
+```
+
+In questo codice:
+- Ho aggiunto una variabile `speed` inizializzata a 2.
+- La velocità dei tubi e del terreno (`fgpos`) aumenta di 0.5 ogni 10 punti.
+- La velocità viene resettata quando il gioco viene riavviato.
