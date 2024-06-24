@@ -1,27 +1,27 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
 
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
 
-	<title>ItalianBird</title>
+    <title>ItalianBird</title>
 
-	<script src="sprite.js"></script>
+    <script src="sprite.js"></script>
 
-	<style>
-	canvas {
-		display: block;
-		position: absolute;
-		margin: auto;
-		top: 0;
-		bottom: 0;
-		left: 0;
-		right: 0;
-	}
-	</style>
+    <style>
+    canvas {
+        display: block;
+        position: absolute;
+        margin: auto;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+    </style>
 </head>
 <body>
 <audio id="background-music" src="background.mp3" loop></audio>
@@ -83,8 +83,11 @@ bird={
             this.y+=this.velocity;
             if(this.y >=height-s_fg.height-10){
                 this.y=height-s_fg.height-10;
-                if(currentstate===states.Game)
+                if(currentstate===states.Game) {
                     currentstate=states.Score;
+                    collisionSound.play(); // Riproduce il suono di collisione
+                    stopBackgroundMusic();
+                }
                 this.velocity=this._jump;
             }	 
             
@@ -150,9 +153,8 @@ pipes={
             var r=bird.radius*bird.radius;
             if(r > d1 || r > d2){
                 currentstate=states.Score;
-                collisionSound.play();
-                backgroundMusic.pause();
-                backgroundMusic.currentTime = 0;
+                collisionSound.play(); // Riproduce il suono di collisione
+                stopBackgroundMusic();
             }
             
             p.x -= 2 * speedMultiplier;
@@ -179,7 +181,7 @@ function onpress(evt){
         case states.Splash:
             currentstate=states.Game;
             bird.jump();
-            backgroundMusic.play();
+            playBackgroundMusic();
             break;
         case states.Game:
             bird.jump();
@@ -206,19 +208,18 @@ function onKeyPress(evt){
     }
 }
 
-function initAudio() {
+function playBackgroundMusic() {
+    backgroundMusic.currentTime = 0;
     backgroundMusic.play().then(() => {
         console.log("Background music is playing.");
     }).catch((error) => {
         console.log("Background music play failed:", error);
-        document.body.addEventListener('click', function() {
-            backgroundMusic.play().then(() => {
-                console.log("Background music started playing after click.");
-            }).catch((error) => {
-                console.log("Background music play failed again:", error);
-            });
-        }, { once: true });
     });
+}
+
+function stopBackgroundMusic() {
+    backgroundMusic.pause();
+    backgroundMusic.currentTime = 0;
 }
 
 function main(){
