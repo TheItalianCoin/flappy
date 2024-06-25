@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=320, height=480, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title>ItalianBird</title>
@@ -100,7 +100,7 @@ const pipes = {
             const _y = height - (s_pipeSouth.height + s_fg.height + 120 + 200 * Math.random());
             this._pipes.push({ x: 500, y: _y, width: s_pipeSouth.width, height: s_pipeSouth.height });
         }
-        const speedMultiplier = 1 + (0.2 * Math.floor(score / 10));
+        const speedMultiplier = 1 + (0.35 * Math.floor(score / 10));
         for (let i = 0; i < this._pipes.length; i++) {
             const p = this._pipes[i];
             if (p.x + p.width < bird.x && !p.passed) {
